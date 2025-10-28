@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simple Trusses Solver</title>
+<style>
+  :root{ --bg:#e5e5e5; --ink:#1f2937; --muted:#4b5563; --btn:#0b7285; --btn-ink:#fff; --grid:#d8d8d8;
+         --tension:#1266d6; --comp:#e11d48; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg)}
+  .wrap{width:min(980px,94vw); margin:22px auto}
+  h1{font-size:28px; font-weight:600; text-align:center; margin:6px 0 28px}
+  .logo{width:min(520px,68vw); display:block; margin:0 auto 38px}
+  .subtitle{font-size:22px; color:var(--muted); text-align:center; margin:0 0 18px}
+  .cta{display:inline-block; padding:12px 28px; border-radius:8px; background:var(--btn); color:var(--btn-ink); font-weight:600; border:0; cursor:pointer}
+  .center{display:flex; justify-content:center}
+
+  .card{background:#fff; border:1px solid var(--grid); border-radius:12px}
+  .bar{padding:10px 14px; border-bottom:1px solid var(--grid); display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .bar h2{margin:0; font-size:16px; font-weight:600}
+  .pad{padding:14px}
+  select,input[type="number"],input[type="text"]{border:1px solid var(--grid); background:#fff; border-radius:10px; height:36px; padding:6px 10px}
+  table{width:100%; border-collapse:separate; border-spacing:0 8px}
+  th,td{font-size:13px; text-align:center}
+  th{color:var(--muted)}
+  td input, td select{width:100%}
+  .grid{display:grid; gap:14px; grid-template-columns: 1.05fr .95fr}
+  .hint{font-size:12px; color:var(--muted)}
+  .btn{border:1px solid var(--grid); background:#fff; border-radius:10px; padding:8px 12px; cursor:pointer}
+  .btn.primary{background:var(--btn); color:#fff; border-color:var(--btn)}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
+  .right{display:flex; justify-content:flex-end}
+  .hidden{display:none}
+  canvas{width:100%; height:520px; display:block; background:#fff; border:1px solid var(--grid); border-radius:12px}
+  .placeholder{font-size:13px; color:var(--muted); text-align:center; margin-top:8px}
+
+  .two-col{display:grid; grid-template-columns: 1fr 1fr; gap:16px}
+  .kpi{display:grid; grid-template-columns: auto 1fr; gap:8px 12px; align-items:center}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+
+  .legend{display:flex; gap:18px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--muted)}
+  .chip{display:inline-flex; align-items:center; gap:8px}
+  .line{width:36px; height:0; border-top:4px solid currentColor; border-radius:2px}
+/* ===== Encabezado institucional en Home ===== */
+.uni-header{
+  display:grid;
+  grid-template-columns: 160px 1fr 160px;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+.uni-header .uni-left,
+.uni-header .uni-right{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.uni-header img{
+  max-width:300px;
+  max-height:144px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+}
+.uni-title{
+  text-align:center;
+  line-height:1.25;
+}
+.uni-title .uabc{
+  font-size:32px;
+  font-weight:700;
+}
+.uni-title .fim{
+  margin-top:4px;
+  font-size:30px;
+  color:var(--muted);
+  font-weight:600;
+}
+
+/* Ajuste responsive */
+@media (max-width:720px){
+  .uni-header{ grid-template-columns: 100px 1fr 100px; }
+  .uni-header img{ max-width:95px; max-height:60px; }
+  .uni-title .uabc{ font-size:16px; }
+  .uni-title .fim{ font-size:14px; }
+}
+
+
+/* Subir bloque de logo + subtítulo + botón */
+#view-home .logo{
+  margin: -80px auto -12px !important;   /* más negativo = más arriba */
+}
+
+#view-home .subtitle{
+  margin: -40px 0 10px !important;       /* acércalo al logo */
+  font-size: 20px !important;            /* opcional */
+}
+
+#view-home .center{
+  margin-top: -7px !important;           /* sube el botón */
+}
+
+</style>
+</head>
+<body>
+  <main class="wrap">
+
+    <!-- ============ PANTALLA 1: INICIO ============ -->
+    <section id="view-home">
+  <!-- Encabezado institucional -->
+  <div class="uni-header">
+    <div class="uni-left">
+      <img src="assets/LogoUABC.png" alt="Logo UABC">
+    </div>
+    <div class="uni-title">
+      <div class="uabc">Universidad Autónoma de Baja California</div>
+      <div class="fim">Facultad de Ingeniería Mexicali</div>
+    </div>
+    <div class="uni-right">
+      <img src="assets/LogoFIMVector.png" alt="Logo FIM">
+    </div>
+  </div>
+
+  <!-- Título de la app -->
+  <h1>Simple Trusses Solver</h1>
+
+  <!-- Logo central existente -->
+  <img src="assets/logo.png" alt="Logo de Simple Trusses Solver" class="logo" width="450" height="" />
+  <p class="subtitle">Simulador educativo del Método de Nodos</p>
+  <div class="center">
+    <button class="cta" id="btn-start">Iniciar Simulación</button>
+  </div>
+</section>
+
+
+    <!-- ============ PANTALLA 2: NODOS ============ -->
+    <section id="view-nodes" class="hidden">
+      <div class="card">
+        <div class="bar">
+          <button class="btn" id="back-home">&lt; Volver</button>
+          <h2 style="margin-left:6px">Definición de Nodos</h2>
+          <span style="flex:1 1 auto"></span>
+          <label>Nodos:</label>
+          <select id="node-count"></select>
+          <label>Unidades:</label>
+          <select id="units">
+            <option>(m, N)</option>
+            <option>(m, kN)</option>
+            <option>(ft, lbf)</option>
+            <option>(in, lbf)</option>
+          </select>
+        </div>
+
+        <div class="pad grid">
+          <div>
+            <div class="row"><b>Coordenadas y cargas nodales</b> <span class="hint">(x,y ≥ 0; máx. 4 decimales; sin repetidos)</span></div>
+            <table id="nodes-table">
+              <thead>
+                <tr>
+                  <th>Nodo</th>
+                  <th>x <small id="ux">[m]</small></th>
+                  <th>y <small id="uy">[m]</small></th>
+                  <th>Fx <small id="ufx">[N]</small></th>
+                  <th>Fy <small id="ufy">[N]</small></th>
+                  <th>Apoyo</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="right" style="margin-top:6px">
+              <button id="to-bars" class="btn primary" disabled>Continuar a Barras</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="row" style="justify-content:center"><b>Vista de Nodos</b></div>
+            <canvas id="nodes-canvas" width="900" height="520"></canvas>
+            <div id="nodes-placeholder" class="placeholder">Ingresa coordenadas x,y para visualizar los nodos.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA 3: BARRAS ============ -->
+    <section id="view-bars" class="hidden">
+      <div class="card">
+        <div class="bar">
+          <button class="btn" id="back-nodes">&lt; Nodos</button>
+          <h2 style="margin-left:6px">Definición de Barras</h2>
+          <span style="flex:1 1 auto"></span>
+          <div class="hint" id="bars-equation">m = 2·n − r = …</div>
+        </div>
+
+        <div class="pad grid">
+          <div>
+            <div class="row" style="gap:14px">
+              <b>Barras i–j</b>
+              <span class="hint">Sugerido: <span id="m-sug">0</span>, Máx: <span id="m-max">0</span></span>
+              <label style="margin-left:auto">Cantidad:</label>
+              <select id="bars-count"></select>
+            </div>
+
+            <table id="bars-table">
+              <thead>
+                <tr><th>Barra</th><th>i (Nodo)</th><th>j (Nodo)</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <div class="right" style="margin-top:6px">
+              <button id="to-reactions" class="btn primary" disabled>Calcular Reacciones</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="row" style="justify-content:center"><b>Vista de armadura (nodos + barras)</b></div>
+            <canvas id="bars-canvas" width="900" height="520"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA 4: REACCIONES ============ -->
+    <section id="view-reactions" class="hidden">
+      <div class="card">
+        <div class="bar">
+          <button class="btn" id="back-bars">&lt; Barras</button>
+          <h2 style="margin-left:6px">Cálculo de Reacciones</h2>
+          <span style="flex:1 1 auto"></span>
+          <div class="hint" id="rx-summary">r = …</div>
+        </div>
+
+        <div class="pad two-col">
+          <div>
+            <div class="row"><b>Resumen</b></div>
+            <div class="kpi mono" style="margin-top:8px">
+              <div class="label">Estado:</div> <div id="rx-state">—</div>
+              <div class="label">ΣFx:</div> <div id="sum-fx">—</div>
+              <div class="label">ΣFy:</div> <div id="sum-fy">—</div>
+              <div class="label">ΣM:</div>  <div id="sum-m">—</div>
+            </div>
+            <div class="hint" style="margin-top:6px">Nota: valores deben ser ≈ 0 si el equilibrio se resolvió correctamente.</div>
+
+            <div style="margin-top:18px" id="bars-forces-left">
+              <div class="row"><b>Fuerzas en Barras (tensión, compresión) con componentes</b></div>
+              <table id="bars-forces" style="margin-top:6px">
+                <thead>
+                  <tr>
+                    <th>Barra</th><th>Nodo i</th><th>Nodo j</th>
+                    <th>L <small id="uL">[m]</small></th>
+                    <th>cosx</th><th>cosy</th>
+                    <th>F <small id="uF">[N]</small></th>
+                    <th>Fx_comp <small id="uFx">[N]</small></th>
+                    <th>Fy_comp <small id="uFy">[N]</small></th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="right" style="margin-top:10px">
+              <button class="btn primary" id="to-results" disabled>Ver Resultados</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="row"><b>Reacciones por apoyo</b></div>
+            <table id="rx-table" style="margin-top:6px">
+              <thead>
+                <tr><th>Apoyo (Nodo)</th><th>Rx</th><th>Ry</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA 5: RESULTADOS GRÁFICOS ============ -->
+    <section id="view-results" class="hidden">
+      <div class="card">
+        <div class="bar">
+          <button class="btn" id="back-reactions">&lt; Reacciones</button>
+          <h2 style="margin-left:6px">Dibujo de la Armadura — <span id="units-head">[m, N]</span></h2>
+          <span style="flex:1 1 auto"></span>
+          <div class="legend">
+            <span class="chip" style="color:var(--tension)"><span class="line"></span> Tensión</span>
+            <span class="chip" style="color:var(--comp)"><span class="line"></span> Compresión</span>
+            <span class="chip"><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="#111"/></svg> Nodo</span>
+            <span class="chip"><svg width="14" height="14"><path d="M2 12 L12 2" stroke="#111" stroke-width="2"/><path d="M12 2 L9 3.2 L10.8 5 Z" fill="#111"/></svg> Reacción</span>
+          </div>
+          <button class="btn" id="btn-export-png" style="margin-left:10px">Exportar PNG</button>
+          <button class="btn" id="btn-export-svg">Exportar SVG</button>
+        </div>
+
+        <div class="pad">
+          <canvas id="results-canvas" width="900" height="560"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+<script>
+/* ===== Navegación ===== */
+const show = id => {
+  ["view-home","view-nodes","view-bars","view-reactions","view-results"].forEach(v => document.getElementById(v).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+};
+document.getElementById("btn-start").onclick = ()=> show("view-nodes");
+document.getElementById("back-home").onclick = ()=> show("view-home");
+document.getElementById("back-nodes").onclick = ()=> show("view-nodes");
+document.getElementById("back-bars").onclick  = ()=> show("view-bars");
+document.getElementById("back-reactions").onclick = ()=> show("view-reactions");
+
+/* ===== Estado ===== */
+const state = {
+  units:"(m, N)",
+  n:3,
+  points:[],   // [{x:null|num, y:null|num, label:"N1"}]
+  loads:{},    // {idx:[Fx,Fy]}
+  supports:[], // ["Ninguno" | "Pasador (x,y)" | "Rodillo-x" | "Rodillo-y"]
+  edges:[],    // [[i,j], ...]
+  results:{ members:null, Rx:null, Ry:null }
+};
+
+/* ===== Selects iniciales ===== */
+const nodeCountSel = document.getElementById("node-count");
+for(let i=2;i<=20;i++){ const o=document.createElement("option"); o.textContent=i; nodeCountSel.appendChild(o); }
+nodeCountSel.value = state.n;
+document.getElementById("units").value = state.units;
+
+/* ===== Unidades ===== */
+function parseUnits(uStr){ const m=/\(([^,]+),\s*([^)]+)\)/.exec(uStr||""); return m?[m[1].trim(),m[2].trim()]:["",""]; }
+function updateUnitLabels(){
+  const [lenU, forceU] = parseUnits(state.units);
+  const set=(id,txt)=>{ const el=document.getElementById(id); if(el) el.textContent=txt?`[${txt}]`:""; };
+  set("ux",lenU); set("uy",lenU); set("ufx",forceU); set("ufy",forceU);
+  ["uL","uF","uFx","uFy"].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=`[${id==="uL"?lenU:forceU}]`; });
+  const uh=document.getElementById("units-head"); if(uh) uh.textContent=`[${lenU}, ${forceU}]`;
+}
+
+/* ===== Entrada numérica con 4 decimales ===== */
+function clampDecimals(str,max=4){
+  const idx=str.indexOf(".");
+  if(idx===-1) return str;
+  const head=str.slice(0,idx+1), tail=str.slice(idx+1).replace(/\./g,"");
+  return head + tail.slice(0,max);
+}
+function onKeyDownDigits(e, {allowMinus=false}={}){
+  const ok = ["Backspace","Delete","Tab","ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","Enter"].includes(e.key)
+          || ((e.ctrlKey||e.metaKey) && ["a","c","v","x","z","y"].includes(e.key.toLowerCase()))
+          || /\d/.test(e.key)
+          || e.key==="."
+          || (allowMinus && e.key==="-" );
+  if(!ok) e.preventDefault();
+}
+function onPasteClean(e, {allowMinus=false}={}){
+  e.preventDefault();
+  let t=(e.clipboardData||window.clipboardData).getData("text");
+  t=t.replace(/[^\d\.\-]/g,"");
+  if(!allowMinus) t=t.replace(/\-/g,"");
+  const firstDot=t.indexOf(".");
+  if(firstDot!==-1){ t=t.slice(0,firstDot+1)+t.slice(firstDot+1).replace(/\./g,""); }
+  const minusCount=(t.match(/\-/g)||[]).length;
+  if(minusCount>1) t=t.replace(/\-/g,"");
+  if(t.length>1 && t.indexOf("-")>0) t=t.replace(/\-/g,"");
+  t=clampDecimals(t,4);
+  document.execCommand("insertText", false, t);
+}
+function onInputClean(el,{allowMinus=false, minZero=false}={}){
+  let v=el.value;
+  v=v.replace(/[^\d\.\-]/g,"");
+  if(!allowMinus) v=v.replace(/\-/g,"");
+  const firstDot=v.indexOf(".");
+  if(firstDot!==-1){ v=v.slice(0,firstDot+1)+v.slice(firstDot+1).replace(/\./g,""); }
+  const minusCount=(v.match(/\-/g)||[]).length;
+  if(minusCount>1) v=v.replace(/\-/g,"");
+  if(v.length>1 && v.indexOf("-")>0) v=v.replace(/\-/g,"");
+  v=clampDecimals(v,4);
+  if(minZero && v.startsWith("-")) v=v.replace("-","");
+  el.value=v;
+}
+function onBlurFormat(el,{allowMinus=false, minZero=false}={}){
+  if(el.value==="") return;
+  let num = Number(el.value);
+  if(!isFinite(num)){ el.value=""; return; }
+  if(minZero && num<0) num=0;
+  el.value = num.toFixed(4).replace(/\.?0+$/,"");
+}
+function toNumOrNull(s){ if(s==null) return null; const t=String(s).trim(); if(t==="") return null; const x=Number(t); return Number.isFinite(x)?x:null; }
+
+/* ===== Estado según n ===== */
+function ensureStateForN(n){
+  state.n=n;
+  const old=state.points.slice();
+  state.points=[]; for(let i=1;i<=n;i++){ const prev=old.find(p=>p.label==="N"+i); state.points.push({x:(prev?.x ?? null), y:(prev?.y ?? null), label:"N"+i}); }
+  const newLoads={}; for(let i=1;i<=n;i++) newLoads[i]=state.loads[i] ?? [0,0]; state.loads=newLoads;
+  const sup=[]; for(let i=1;i<=n;i++) sup.push(state.supports[i-1] ?? "Ninguno"); state.supports=sup;
+  state.edges=(state.edges||[]).filter(e=>Array.isArray(e)&&e[0]>=1&&e[0]<=n&&e[1]>=1&&e[1]<=n);
+}
+const supportsOptions=["Ninguno","Pasador (x,y)","Rodillo-x","Rodillo-y"];
+
+/* ===== Tabla de Nodos ===== */
+function buildNodesTable(){
+  const tbody=document.querySelector("#nodes-table tbody");
+  tbody.innerHTML="";
+  for(let i=1;i<=state.n;i++){
+    const px=state.points[i-1].x, py=state.points[i-1].y;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>N${i}</td>
+      <td><input type="text" inputmode="decimal" step="0.0001" placeholder="" value="${px ?? ""}"></td>
+      <td><input type="text" inputmode="decimal" step="0.0001" placeholder="" value="${py ?? ""}"></td>
+      <td><input type="text" inputmode="decimal" step="0.0001" value="${state.loads[i]?.[0] ?? 0}"></td>
+      <td><input type="text" inputmode="decimal" step="0.0001" value="${state.loads[i]?.[1] ?? 0}"></td>
+      <td><select>${supportsOptions.map(s=>`<option>${s}</option>`).join("")}</select></td>`;
+    const xEl=tr.children[1].firstElementChild;
+    const yEl=tr.children[2].firstElementChild;
+    const fxEl=tr.children[3].firstElementChild;
+    const fyEl=tr.children[4].firstElementChild;
+    const supEl=tr.children[5].firstElementChild; supEl.value=state.supports[i-1];
+
+    // x,y: sólo positivos con 4 decimales
+    [xEl,yEl].forEach(el=>{
+      el.addEventListener("keydown", e=>onKeyDownDigits(e,{allowMinus:false}));
+      el.addEventListener("paste",  e=>onPasteClean(e,{allowMinus:false}));
+      el.addEventListener("input", ()=>onInputClean(el,{allowMinus:false, minZero:true}));
+      el.addEventListener("blur",  ()=>{ onBlurFormat(el,{allowMinus:false, minZero:true}); state.points[i-1][el===xEl?"x":"y"]=toNumOrNull(el.value); drawNodesCanvas(); validateNodes();});
+    });
+
+    // Fx,Fy: con signo, 4 decimales
+    [fxEl,fyEl].forEach((el,idx)=>{
+      el.addEventListener("keydown", e=>onKeyDownDigits(e,{allowMinus:true}));
+      el.addEventListener("paste",  e=>onPasteClean(e,{allowMinus:true}));
+      el.addEventListener("input", ()=>onInputClean(el,{allowMinus:true}));
+      el.addEventListener("blur",  ()=>{ onBlurFormat(el,{allowMinus:true}); const pair=state.loads[i]??[0,0]; pair[idx]=toNumOrNull(el.value) ?? 0; state.loads[i]=pair; drawNodesCanvas();});
+    });
+
+    supEl.onchange=()=>{ state.supports[i-1]=supEl.value; drawNodesCanvas(); };
+
+    tbody.appendChild(tr);
+  }
+}
+
+/* ===== Validación de Nodos ===== */
+function validateNodes(){
+  const valid=state.points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.y>=0);
+  let ok=valid.length>=2;
+  if(ok){
+    const seen=new Set();
+    for(const p of valid){
+      const key=`${p.x.toFixed(4)},${p.y.toFixed(4)}`;
+      if(seen.has(key)){ ok=false; break; }
+      seen.add(key);
+    }
+  }
+  document.getElementById("to-bars").disabled=!ok;
+  return ok;
+}
+
+/* ===== Dibujo Nodos ===== */
+function drawNodesCanvas(){
+  const c=document.getElementById("nodes-canvas"), ctx=c.getContext("2d");
+  const ph=document.getElementById("nodes-placeholder");
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const r=c.getBoundingClientRect(); const w=Math.floor(r.width*dpr), h=Math.floor(r.height*dpr);
+  if(c.width!==w||c.height!==h){ c.width=w; c.height=h; }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,r.width,r.height);
+
+  const pts=state.points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+  ph.style.display=(pts.length===0)?"block":"none"; if(pts.length===0) return;
+
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  let minx=Math.min(...xs,0), maxx=Math.max(...xs,1);
+  let miny=Math.min(...ys,0), maxy=Math.max(...ys,1);
+  let wx=Math.max(1,maxx-minx), wy=Math.max(1,maxy-miny);
+  const pad=0.08; minx-=wx*pad; maxx+=wx*pad; miny-=wy*pad; maxy+=wy*pad; wx=maxx-minx; wy=maxy-miny;
+
+  const left=16, bottom=16; const vw=r.width-32, vh=r.height-32;
+  const s=Math.min(vw/wx, vh/wy); const ox=left+(vw-s*wx)/2; const oy=bottom+(vh-s*wy)/2;
+  const w2v=(x,y)=>[ ox+(x-minx)*s, r.height-(oy+(y-miny)*s) ];
+
+  const [gx0,gy0]=w2v(minx,0), [gx1,gy1]=w2v(maxx,0);
+  ctx.fillStyle="#eef2f7"; ctx.fillRect(0, gy0, r.width, r.height-gy0);
+  ctx.strokeStyle="#c7cdd8"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(gx0,gy0); ctx.lineTo(gx1,gy1); ctx.stroke();
+  const [yx0,yy0]=w2v(0,miny), [yx1,yy1]=w2v(0,maxy);
+  ctx.beginPath(); ctx.moveTo(yx0,yy1); ctx.lineTo(yx0,yy0); ctx.stroke();
+
+  ctx.font="12px Inter, sans-serif"; ctx.fillStyle="#111";
+  for(let i=1;i<=state.n;i++){
+    const p=state.points[i-1]; if(!Number.isFinite(p.x)||!Number.isFinite(p.y)) continue;
+    const [x,y]=w2v(p.x,p.y);
+    const [fx,fy]=state.loads[i]??[0,0];
+    if(Math.hypot(fx,fy)>1e-9){
+      drawArrow(ctx,x,y, x+fx*0.06, y-fy*0.06, 1.4, 10, "#333");
+    }
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+    ctx.fillText("N"+i, x+6, y-6);
+  }
+}
+function drawArrow(ctx,x1,y1,x2,y2,w,head,color){
+  ctx.strokeStyle=color; ctx.lineWidth=w;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const ang=Math.atan2(y2-y1,x2-x1);
+  const a1=ang+2.7, a2=ang-2.7;
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2+head*Math.cos(a1), y2+head*Math.sin(a1));
+  ctx.lineTo(x2+head*Math.cos(a2), y2+head*Math.sin(a2));
+  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+}
+
+/* ===== Eventos Nodos ===== */
+nodeCountSel.onchange = ()=>{ ensureStateForN(+nodeCountSel.value); buildNodesTable(); updateUnitLabels(); drawNodesCanvas(); validateNodes(); };
+document.getElementById("units").onchange = e => { state.units=e.target.value; updateUnitLabels(); };
+document.getElementById("to-bars").onclick = ()=>{ show("view-bars"); setupBarsScreen(); };
+
+/* ===================== BARRAS ===================== */
+function computeR(supp){ let r=0; for(const s of supp||[]){ if(s==="Pasador (x,y)") r+=2; else if(s==="Rodillo-x"||s==="Rodillo-y") r+=1; } return r; }
+function barsSuggestedAndMax(){ const n=state.n; const r=computeR(state.supports); return { r, mSuggested:Math.max(0,2*n-r), mMax:Math.max(0,(n*(n-1))>>1) }; }
+function ensureEdgesCount(m){ const old=(state.edges||[]).slice(); state.edges=[]; for(let k=0;k<m;k++) state.edges[k]=old[k]?[...old[k]]:[null,null]; }
+function edgeExists(i,j,ex=-1){ if(i==null||j==null) return false; const a=Math.min(i,j), b=Math.max(i,j); for(let k=0;k<state.edges.length;k++){ if(k===ex) continue; const e=state.edges[k]; if(e&&e[0]!=null&&e[1]!=null){ const ai=Math.min(e[0],e[1]), bi=Math.max(e[0],e[1]); if(a===ai&&b===bi) return true; } } return false; }
+
+function buildBarsTable(){
+  const tbody=document.querySelector("#bars-table tbody"); tbody.innerHTML="";
+  const n=state.n;
+  for(let k=0;k<state.edges.length;k++){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>B${k+1}</td><td><select></select></td><td><select></select></td>`;
+    const selI=tr.children[1].firstElementChild, selJ=tr.children[2].firstElementChild;
+    const mk=(cur)=>['<option value="">Nodo</option>'].concat(Array.from({length:n},(_,i)=>`<option value="${i+1}" ${cur===i+1?'selected':''}>N${i+1}</option>`)).join("");
+    const curI=state.edges[k]?.[0]??null, curJ=state.edges[k]?.[1]??null;
+    selI.innerHTML=mk(curI); selJ.innerHTML=mk(curJ);
+    selI.onchange=()=>{ const v=selI.value===""?null:+selI.value; const other=state.edges[k]?.[1]??null; if(v!=null&&other!=null&&v===other){ selI.value=""; return; } if(v!=null&&edgeExists(v,other,k)){ selI.value=""; return;} state.edges[k]=[v,other]; drawBarsCanvas(); validateBars(); };
+    selJ.onchange=()=>{ const v=selJ.value===""?null:+selJ.value; const other=state.edges[k]?.[0]??null; if(v!=null&&other!=null&&v===other){ selJ.value=""; return; } if(v!=null&&edgeExists(other,v,k)){ selJ.value=""; return;} state.edges[k]=[other,v]; drawBarsCanvas(); validateBars(); };
+    tbody.appendChild(tr);
+  }
+}
+function fillBarsCountSelector(mMax,mSuggested){
+  const sel=document.getElementById("bars-count"); sel.innerHTML="";
+  for(let i=1;i<=Math.max(1,mMax);i++){ const o=document.createElement("option"); o.textContent=i; sel.appendChild(o); }
+  const def=state.edges?.length?state.edges.length:Math.min(Math.max(1,mSuggested),Math.max(1,mMax));
+  sel.value=String(def);
+  sel.onchange=()=>{ ensureEdgesCount(+sel.value); buildBarsTable(); drawBarsCanvas(); validateBars(); };
+}
+function drawBarsCanvas(){
+  const c=document.getElementById("bars-canvas"), ctx=c.getContext("2d");
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const r=c.getBoundingClientRect(); const w=Math.floor(r.width*dpr), h=Math.floor(r.height*dpr);
+  if(c.width!==w||c.height!==h){ c.width=w; c.height=h; }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,r.width,r.height);
+
+  const pts=state.points.map((p,idx)=>({idx:idx+1,p})).filter(o=>Number.isFinite(o.p.x)&&Number.isFinite(o.p.y));
+  if(pts.length===0) return;
+
+  const xs=pts.map(o=>o.p.x), ys=pts.map(o=>o.p.y);
+  let minx=Math.min(...xs,0), maxx=Math.max(...xs,1);
+  let miny=Math.min(...ys,0), maxy=Math.max(...ys,1);
+  let wx=Math.max(1,maxx-minx), wy=Math.max(1,maxy-miny);
+  const pad=0.08; minx-=wx*pad; maxx+=wx*pad; miny-=wy*pad; maxy+=wy*pad; wx=maxx-minx; wy=maxy-miny;
+
+  const left=16,bottom=16; const vw=r.width-32,vh=r.height-32;
+  const s=Math.min(vw/wx, vh/wy); const ox=left+(vw-s*wx)/2; const oy=bottom+(vh-s*wy)/2;
+  const w2v=(x,y)=>[ ox+(x-minx)*s, r.height-(oy+(y-miny)*s) ];
+
+  const [gx0,gy0]=w2v(minx,0), [gx1,gy1]=w2v(maxx,0);
+  ctx.fillStyle="#eef2f7"; ctx.fillRect(0, gy0, r.width, r.height-gy0);
+  ctx.strokeStyle="#c7cdd8"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(gx0,gy0); ctx.lineTo(gx1,gy1); ctx.stroke();
+  const [yx0,yy0]=w2v(0,miny), [yx1,yy1]=w2v(0,maxy);
+  ctx.beginPath(); ctx.moveTo(yx0,yy1); ctx.lineTo(yx0,yy0); ctx.stroke();
+
+  const vpos=new Map(); for(const o of pts){ vpos.set(o.idx, w2v(o.p.x,o.p.y)); }
+
+  ctx.lineWidth=2.4;
+  for(let k=0;k<state.edges.length;k++){
+    const e=state.edges[k]; if(!e) continue; const [i,j]=e; if(i==null||j==null) continue;
+    const a=vpos.get(i), b=vpos.get(j); if(!a||!b) continue;
+    ctx.strokeStyle="#0f172a"; ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+    const xm=(a[0]+b[0])/2, ym=(a[1]+b[1])/2; ctx.fillStyle="#0f172a"; ctx.font="12px Inter, sans-serif"; ctx.fillText(`B${k+1}`, xm+6, ym-6);
+  }
+
+  ctx.fillStyle="#111"; ctx.font="12px Inter, sans-serif";
+  for(const o of pts){ const [x,y]=vpos.get(o.idx); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.fillText("N"+o.idx, x+6, y-6); }
+}
+function validateBars(){
+  let ok=true;
+  for(let k=0;k<state.edges.length;k++){
+    const e=state.edges[k]; if(!e){ ok=false; break; }
+    const [i,j]=e; if(i==null||j==null||i===j||edgeExists(i,j,k)){ ok=false; break; }
+    const pi=state.points[i-1], pj=state.points[j-1];
+    if(!pi||!pj||!Number.isFinite(pi.x)||!Number.isFinite(pi.y)||!Number.isFinite(pj.x)||!Number.isFinite(pj.y)){ ok=false; break; }
+  }
+  document.getElementById("to-reactions").disabled=!ok;
+  return ok;
+}
+function setupBarsScreen(){
+  const {r,mSuggested,mMax}=barsSuggestedAndMax();
+  document.getElementById("bars-equation").textContent=`m = 2·n − r = 2·${state.n} − ${r} = ${mSuggested}`;
+  document.getElementById("m-sug").textContent=mSuggested; document.getElementById("m-max").textContent=mMax;
+  if(!state.edges||state.edges.length===0){ ensureEdgesCount(Math.min(Math.max(1,mSuggested),Math.max(1,mMax))); }
+  fillBarsCountSelector(mMax,mSuggested); buildBarsTable(); drawBarsCanvas(); validateBars();
+}
+document.getElementById("to-reactions").onclick=()=>{ show("view-reactions"); setupReactionsScreen(); };
+
+/* ===================== REACCIONES & BARRAS ===================== */
+function buildEquilibriumSystem(){
+  const pos=new Map(); for(const p of state.points){ if(Number.isFinite(p.x)&&Number.isFinite(p.y)) pos.set(p.label,[p.x,p.y]); }
+  let sFx=0,sFy=0,sM=0;
+  for(let i=1;i<=state.n;i++){ const p=state.points[i-1]; if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)) continue; const [fx,fy]=state.loads[i]??[0,0]; sFx+=fx; sFy+=fy; sM+=p.x*fy - p.y*fx; }
+  const unknowns=[];
+  for(let i=1;i<=state.n;i++){ const s=state.supports[i-1]; if(s==="Pasador (x,y)") unknowns.push({node:i,comp:'Rx'},{node:i,comp:'Ry'}); else if(s==="Rodillo-x") unknowns.push({node:i,comp:'Rx'}); else if(s==="Rodillo-y") unknowns.push({node:i,comp:'Ry'}); }
+  const r=unknowns.length;
+  const A=Array.from({length:3},()=>Array(r).fill(0)); const b=[-sFx,-sFy,-sM];
+  unknowns.forEach((u,j)=>{ const [x,y]=pos.get("N"+u.node)||[0,0]; if(u.comp==='Rx'){A[0][j]=1;A[1][j]=0;A[2][j]=-y;} if(u.comp==='Ry'){A[0][j]=0;A[1][j]=1;A[2][j]= x;} });
+  return {A,b,unknowns,r,sFx,sFy,sM};
+}
+function solve3x3(A,b){
+  const M=[A[0].slice(0,3),A[1].slice(0,3),A[2].slice(0,3)], v=b.slice(0,3);
+  for(let i=0;i<3;i++){
+    let piv=i; for(let r=i+1;r<3;r++) if(Math.abs(M[r][i])>Math.abs(M[piv][i])) piv=r;
+    if(Math.abs(M[piv][i])<1e-12) return null;
+    if(piv!==i){ [M[i],M[piv]]=[M[piv],M[i]]; [v[i],v[piv]]=[v[piv],v[i]]; }
+    const f=M[i][i]; for(let c=i;c<3;c++) M[i][c]/=f; v[i]/=f;
+    for(let r=0;r<3;r++){ if(r===i) continue; const k=M[r][i]; for(let c=i;c<3;c++) M[r][c]-=k*M[i][c]; v[r]-=k*v[i]; }
+  }
+  return v;
+}
+function gaussSolve(Aug){ const n=Aug.length; for(let i=0;i<n;i++){ let p=i; for(let r=i+1;r<n;r++) if(Math.abs(Aug[r][i])>Math.abs(Aug[p][i])) p=r; if(Math.abs(Aug[p][i])<1e-12) return null; if(p!==i){const t=Aug[i];Aug[i]=Aug[p];Aug[p]=t;} const f=Aug[i][i]; for(let c=i;c<=n;c++) Aug[i][c]/=f; for(let r=0;r<n;r++){ if(r===i) continue; const k=Aug[r][i]; for(let c=i;c<=n;c++) Aug[r][c]-=k*Aug[i][c]; } } return Aug.map(row=>row[n]); }
+function leastSquares(A,b){ const m=A[0].length; const AtA=Array.from({length:m},()=>Array(m).fill(0)); const Atb=Array(m).fill(0);
+  for(let r=0;r<A.length;r++){ for(let c1=0;c1<m;c1++){ Atb[c1]+=A[r][c1]*B(r); for(let c2=0;c2<m;c2++){ AtA[c1][c2]+=A[r][c1]*A[r][c2]; } } }
+  function B(r){ return b[r]; }
+  const Aug=AtA.map((row,i)=>row.concat([Atb[i]])); return gaussSolve(Aug);
+}
+function computeMemberForces(RxMap,RyMap){
+  if(!state.edges||state.edges.length===0) return null;
+  const pos=new Map(); for(let i=1;i<=state.n;i++){ const p=state.points[i-1]; if(Number.isFinite(p?.x)&&Number.isFinite(p?.y)) pos.set(i,[p.x,p.y]); }
+  const bars=[]; for(const e of state.edges){ const [i,j]=e||[]; if(i==null||j==null) return null; const pi=pos.get(i), pj=pos.get(j); if(!pi||!pj) return null; const dx=pj[0]-pi[0], dy=pj[1]-pi[1]; const L=Math.hypot(dx,dy); if(L<=1e-12) return null; const cx=dx/L, cy=dy/L; bars.push([i,j,L,cx,cy]); }
+  const m=bars.length, A=[], b=[];
+  for(let k=1;k<=state.n;k++){
+    const pk=pos.get(k); if(!pk) continue;
+    const rowFx=Array(m).fill(0); for(let idx=0; idx<m; idx++){ const [i,j,,cx]=bars[idx]; if(k===i) rowFx[idx]=cx; else if(k===j) rowFx[idx]=-cx; }
+    const loadK=state.loads[k]??[0,0]; const rx=RxMap.get(k)||0, ry=RyMap.get(k)||0; A.push(rowFx); b.push(-(loadK[0]+rx));
+    const rowFy=Array(m).fill(0); for(let idx=0; idx<m; idx++){ const [i,j,,,cy]=bars[idx]; if(k===i) rowFy[idx]=cy; else if(k===j) rowFy[idx]=-cy; }
+    A.push(rowFy); b.push(-(loadK[1]+ry));
+  }
+  const x=leastSquares(A,b); if(!x) return null;
+  const table=[]; for(let idx=0; idx<m; idx++){ const [i,j,L,cx,cy]=bars[idx]; const F=x[idx]; const Fx=F*cx, Fy=F*cy; table.push({bar:`B${idx+1}`, i:`N${i}`, j:`N${j}`, L, cx, cy, F, Fx, Fy, estado:(F>=0)?"Tensión":"Compresión"}); }
+  return table;
+}
+function setupReactionsScreen(){
+  updateUnitLabels();
+  const r=computeR(state.supports); document.getElementById("rx-summary").textContent=`r = ${r}`;
+  const {A,b,unknowns,r:rr,sFx,sFy,sM}=buildEquilibriumSystem();
+  const tbody=document.querySelector("#rx-table tbody"); tbody.innerHTML="";
+  let solved=null, statusText="";
+  if(rr<3) statusText="Inestable (r < 3). Define apoyos suficientes (r = 3).";
+  else if(rr>3) statusText="Hiperestático (r > 3). Se requiere rigidez del sistema.";
+  else { solved=solve3x3(A,b); if(!solved) statusText="Sistema singular. Revisa geometría y apoyos."; }
+
+  const Rx=new Map(), Ry=new Map();
+  if(solved){ for(let j=0;j<3;j++){ const u=unknowns[j]; if(u.comp==='Rx') Rx.set(u.node, solved[j]); if(u.comp==='Ry') Ry.set(u.node, solved[j]); } }
+  for(let i=1;i<=state.n;i++){
+    const sup=state.supports[i-1]; if(sup==="Ninguno") continue;
+    const rx=Rx.has(i)?Rx.get(i):"—"; const ry=Ry.has(i)?Ry.get(i):"—";
+    const tr=document.createElement("tr"); tr.innerHTML=`<td>N${i} (${sup})</td><td class="mono">${(typeof rx==="number")?rx.toFixed(6):rx}</td><td class="mono">${(typeof ry==="number")?ry.toFixed(6):ry}</td>`;
+    tbody.appendChild(tr);
+  }
+  let Fx=sFx,Fy=sFy,M=sM;
+  if(solved){ for(let i=1;i<=state.n;i++){ const p=state.points[i-1]; if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)) continue; const rx=Rx.get(i)||0, ry=Ry.get(i)||0; Fx+=rx; Fy+=ry; M+=p.x*ry - p.y*rx; } }
+  document.getElementById("rx-state").textContent=statusText||"Equilibrio global resuelto.";
+  document.getElementById("sum-fx").textContent=(typeof Fx==="number")?Fx.toExponential(6):"—";
+  document.getElementById("sum-fy").textContent=(typeof Fy==="number")?Fy.toExponential(6):"—";
+  document.getElementById("sum-m").textContent =(typeof M==="number") ?M.toExponential(6):"—";
+
+  /* Fuerzas en barras */
+  const forcesTbody=document.querySelector("#bars-forces tbody"); forcesTbody.innerHTML="";
+  const toResults=document.getElementById("to-results"); toResults.disabled=true; state.results={members:null,Rx:null,Ry:null};
+  if(rr!==3||!solved){ const tr=document.createElement("tr"); tr.innerHTML=`<td colspan="10" class="hint">No es posible calcular fuerzas en barras (r = 3 requerido).</td>`; forcesTbody.appendChild(tr); return; }
+  const members=computeMemberForces(Rx,Ry);
+  if(!members||members.length===0){ const tr=document.createElement("tr"); tr.innerHTML=`<td colspan="10" class="hint">No hay barras válidas o el sistema no pudo resolverse.</td>`; forcesTbody.appendChild(tr); return; }
+  for(const row of members){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${row.bar}</td><td>${row.i}</td><td>${row.j}</td>
+      <td class="mono">${row.L.toFixed(3)}</td><td class="mono">${row.cx.toFixed(3)}</td><td class="mono">${row.cy.toFixed(3)}</td>
+      <td class="mono">${row.F.toFixed(3)}</td><td class="mono">${row.Fx.toFixed(3)}</td><td class="mono">${row.Fy.toFixed(3)}</td><td>${row.estado}</td>`;
+    forcesTbody.appendChild(tr);
+  }
+  state.results={members, Rx, Ry}; toResults.disabled=false;
+}
+document.getElementById("to-results").onclick=()=>{ show("view-results"); setupResultsScreen(); };
+
+/* ===================== RESULTADOS (flechas dentro del canvas) ===================== */
+function setupResultsScreen(){ updateUnitLabels(); drawResultsCanvas(); }
+function clampEndInsideRect(x1,y1,x2,y2, xmin,ymin,xmax,ymax){
+  let dx=x2-x1, dy=y2-y1, t=1.0;
+  if(dx>0) t=Math.min(t,(xmax-x1)/dx); else if(dx<0) t=Math.min(t,(xmin-x1)/dx);
+  if(dy>0) t=Math.min(t,(ymax-y1)/dy); else if(dy<0) t=Math.min(t,(ymin-y1)/dy);
+  if(!isFinite(t)||t<=0) t=0.0001;
+  return [x1+dx*t, y1+dy*t];
+}
+function clampPoint(x,y, xmin,ymin,xmax,ymax){
+  return [ Math.min(xmax,Math.max(xmin,x)), Math.min(ymax,Math.max(ymin,y)) ];
+}
+function drawResultsCanvas(){
+  const c=document.getElementById("results-canvas"), ctx=c.getContext("2d");
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const r=c.getBoundingClientRect(); const w=Math.floor(r.width*dpr), h=Math.floor(r.height*dpr);
+  if(c.width!==w||c.height!==h){ c.width=w; c.height=h; }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,r.width,r.height);
+
+  const pts=state.points.map((p,idx)=>({idx:idx+1,p})).filter(o=>Number.isFinite(o.p.x)&&Number.isFinite(o.p.y));
+  if(pts.length===0) return;
+
+  const xs=pts.map(o=>o.p.x), ys=pts.map(o=>o.p.y);
+  let minx=Math.min(...xs,0), maxx=Math.max(...xs,1);
+  let miny=Math.min(...ys,0), maxy=Math.max(...ys,1);
+  let wx=Math.max(1,maxx-minx), wy=Math.max(1,maxy-miny);
+  const pad=0.10; minx-=wx*pad; maxx+=wx*pad; miny-=wy*pad; maxy+=wy*pad; wx=maxx-minx; wy=maxy-miny;
+
+  const left=16,bottom=16; const vw=r.width-32,vh=r.height-32;
+  const s=Math.min(vw/wx, vh/wy); const ox=left+(vw-s*wx)/2; const oy=bottom+(vh-s*wy)/2;
+  const w2v=(x,y)=>[ ox+(x-minx)*s, r.height-(oy+(y-miny)*s) ];
+
+  const [gx0,gy0]=w2v(minx,0), [gx1,gy1]=w2v(maxx,0);
+  ctx.fillStyle="#f8fafc"; ctx.fillRect(0,0,r.width,r.height);
+  ctx.fillStyle="#eef2f7"; ctx.fillRect(0, gy0, r.width, r.height-gy0);
+  ctx.strokeStyle="#c7cdd8"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(gx0,gy0); ctx.lineTo(gx1,gy1); ctx.stroke();
+  const [yx0,yy0]=w2v(0,miny), [yx1,yy1]=w2v(0,maxy);
+  ctx.beginPath(); ctx.moveTo(yx0,yy1); ctx.lineTo(yx0,yy0); ctx.stroke();
+
+  const vpos=new Map(); for(const o of pts){ vpos.set(o.idx, w2v(o.p.x,o.p.y)); }
+
+  // Barras coloreadas
+  const members=state.results.members||[];
+  ctx.lineCap="round"; ctx.lineJoin="round";
+  for(const row of members){
+    const i=+row.i.slice(1), j=+row.j.slice(1);
+    const a=vpos.get(i), b=vpos.get(j); if(!a||!b) continue;
+    ctx.strokeStyle=(row.F>=0)?getComputedStyle(document.documentElement).getPropertyValue('--tension').trim()
+                              :getComputedStyle(document.documentElement).getPropertyValue('--comp').trim();
+    ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+    const xm=(a[0]+b[0])/2, ym=(a[1]+b[1])/2;
+    ctx.fillStyle="#111"; ctx.font="12px Inter, sans-serif"; ctx.fillText(`${row.bar}  F=${row.F.toFixed(3)}`, xm+6, ym-6);
+  }
+
+  // Nodos
+  ctx.fillStyle="#111"; ctx.font="12px Inter, sans-serif";
+  for(const o of pts){ const [x,y]=vpos.get(o.idx); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.fillText("N"+o.idx, x+6, y-6); }
+
+  // Reacciones dentro del recuadro
+  const Rx=state.results.Rx||new Map(), Ry=state.results.Ry||new Map();
+  let maxR=0; for(const i of vpos.keys()){ maxR=Math.max(maxR, Math.abs(Rx.get(i)||0), Math.abs(Ry.get(i)||0)); }
+  const Lref=Math.min(vw,vh); const k=(maxR>0)?(0.16*Lref/maxR):0; // 16% de la vista para la reacción máxima
+  const margin=14, xmin=margin, ymin=margin, xmax=r.width-margin, ymax=r.height-margin;
+
+  for(const i of vpos.keys()){
+    const [x,y]=vpos.get(i);
+    const rx=Rx.get(i)||0, ry=Ry.get(i)||0;
+
+    if(Math.abs(rx)>1e-9){
+      const x2=x + k*rx, y2=y;
+      const [cx,cy]=clampEndInsideRect(x,y,x2,y2, xmin,ymin,xmax,ymax);
+      drawArrow(ctx, x,y, cx,cy, 2,10, "#111");
+      const [lx,ly]=clampPoint(cx+6, cy+12, xmin, ymin, xmax, ymax);
+      ctx.fillText(`Rx=${rx.toFixed(3)}`, lx, ly);
+    }
+    if(Math.abs(ry)>1e-9){
+      const x2=x, y2=y - k*ry; // y hacia arriba
+      const [cx,cy]=clampEndInsideRect(x,y,x2,y2, xmin,ymin,xmax,ymax);
+      drawArrow(ctx, x,y, cx,cy, 2,10, "#111");
+      const [lx,ly]=clampPoint(cx+6, cy-6, xmin, ymin, xmax, ymax);
+      ctx.fillText(`Ry=${ry.toFixed(3)}`, lx, ly);
+    }
+  }
+}
+
+/* ===== Exportación ===== */
+function downloadDataURL(filename, dataURL){
+  const a=document.createElement("a");
+  a.href=dataURL; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function exportResultsPNG(){
+  const c=document.getElementById("results-canvas");
+  drawResultsCanvas();
+  const url=c.toDataURL("image/png");
+  downloadDataURL("truss_resultados.png", url);
+}
+function exportResultsSVG(){
+  const canvas = document.getElementById("results-canvas");
+  const rect = canvas.getBoundingClientRect();
+  const W = Math.round(rect.width);
+  const H = Math.round(rect.height);
+
+  const pts = state.points.map((p,idx)=>({idx:idx+1,p}))
+    .filter(o=>Number.isFinite(o.p.x)&&Number.isFinite(o.p.y));
+  if(pts.length===0) return;
+
+  const xs=pts.map(o=>o.p.x), ys=pts.map(o=>o.p.y);
+  let minx=Math.min(...xs,0), maxx=Math.max(...xs,1);
+  let miny=Math.min(...ys,0), maxy=Math.max(...ys,1);
+  let wx=Math.max(1,maxx-minx), wy=Math.max(1,maxy-miny);
+  const pad=0.10; minx-=wx*pad; maxx+=wx*pad; miny-=wy*pad; maxy+=wy*pad; wx=maxx-minx; wy=maxy-miny;
+
+  const left=16, bottom=16; const vw=W-32, vh=H-32;
+  const s=Math.min(vw/wx, vh/wy); const ox=left+(vw-s*wx)/2; const oy=bottom+(vh-s*wy)/2;
+  const w2v=(x,y)=>[ ox+(x-minx)*s, H - (oy+(y-miny)*s) ];
+
+  const Rx=state.results.Rx||new Map(), Ry=state.results.Ry||new Map();
+  let maxR=0; for(const i of pts.map(p=>p.idx)){ maxR=Math.max(maxR, Math.abs(Rx.get(i)||0), Math.abs(Ry.get(i)||0)); }
+  const Lref=Math.min(vw,vh); const k=(maxR>0)?(0.16*Lref/maxR):0;
+  const margin=14, xmin=margin, ymin=margin, xmax=W-margin, ymax=H-margin;
+
+  const [gx0,gy0]=w2v(minx,0), [gx1,gy1]=w2v(maxx,0);
+  const [yx0,yy0]=w2v(0,miny), [yx1,yy1]=w2v(0,maxy);
+
+  const colorTension = getComputedStyle(document.documentElement).getPropertyValue('--tension').trim() || "#1266d6";
+  const colorComp    = getComputedStyle(document.documentElement).getPropertyValue('--comp').trim()    || "#e11d48";
+
+  let svg = '';
+  svg += `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  svg += `<defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 z" fill="#111"/>
+    </marker>
+  </defs>`;
+  svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="#f8fafc"/>`;
+  svg += `<rect x="0" y="${gy0}" width="${W}" height="${H-gy0}" fill="#eef2f7"/>`;
+  svg += `<line x1="${gx0}" y1="${gy0}" x2="${gx1}" y2="${gy1}" stroke="#c7cdd8" stroke-width="2"/>`;
+  svg += `<line x1="${yx0}" y1="${yy1}" x2="${yx0}" y2="${yy0}" stroke="#c7cdd8" stroke-width="2"/>`;
+
+  const vpos = new Map(); for(const o of pts){ vpos.set(o.idx, w2v(o.p.x,o.p.y)); }
+
+  const members = state.results.members || [];
+  for(const row of members){
+    const i=+row.i.slice(1), j=+row.j.slice(1);
+    const a=vpos.get(i), b=vpos.get(j); if(!a||!b) continue;
+    const col = (row.F>=0)?colorTension:colorComp;
+    svg += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="4" stroke-linecap="round"/>`;
+    const xm=(a[0]+b[0])/2, ym=(a[1]+b[1])/2;
+    svg += `<text x="${xm+6}" y="${ym-6}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">${row.bar}  F=${row.F.toFixed(3)}</text>`;
+  }
+
+  for(const o of pts){
+    const [x,y]=vpos.get(o.idx);
+    svg += `<circle cx="${x}" cy="${y}" r="4" fill="#111"/>`;
+    svg += `<text x="${x+6}" y="${y-6}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">N${o.idx}</text>`;
+  }
+
+  function clampEndInsideRect(x1,y1,x2,y2){
+    let dx=x2-x1, dy=y2-y1, t=1.0;
+    if(dx>0) t=Math.min(t,(xmax-x1)/dx); else if(dx<0) t=Math.min(t,(xmin-x1)/dx);
+    if(dy>0) t=Math.min(t,(ymax-y1)/dy); else if(dy<0) t=Math.min(t,(ymin-y1)/dy);
+    if(!isFinite(t)||t<=0) t=0.0001;
+    return [x1+dx*t, y1+dy*t];
+  }
+  function clampPoint(x,y){ return [ Math.min(xmax,Math.max(xmin,x)), Math.min(ymax,Math.max(ymin,y)) ]; }
+
+  for(const i of vpos.keys()){
+    const [x,y]=vpos.get(i);
+    const rx=state.results.Rx.get(i)||0, ry=state.results.Ry.get(i)||0;
+
+    if(Math.abs(rx)>1e-9){
+      const x2=x + k*rx, y2=y;
+      const end = clampEndInsideRect(x,y,x2,y2);
+      svg += `<line x1="${x}" y1="${y}" x2="${end[0]}" y2="${end[1]}" stroke="#111" stroke-width="2" marker-end="url(#arrow)"/>`;
+      const lbl = clampPoint(end[0]+6, end[1]+12);
+      svg += `<text x="${lbl[0]}" y="${lbl[1]}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">Rx=${rx.toFixed(3)}</text>`;
+    }
+    if(Math.abs(ry)>1e-9){
+      const x2=x, y2=y - k*ry;
+      const end = clampEndInsideRect(x,y,x2,y2);
+      svg += `<line x1="${x}" y1="${y}" x2="${end[0]}" y2="${end[1]}" stroke="#111" stroke-width="2" marker-end="url(#arrow)"/>`;
+      const lbl = clampPoint(end[0]+6, end[1]-6);
+      svg += `<text x="${lbl[0]}" y="${lbl[1]}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">Ry=${ry.toFixed(3)}</text>`;
+    }
+  }
+
+  svg += `</svg>`;
+
+  const blob = new Blob([svg], {type:"image/svg+xml;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  downloadDataURL("truss_resultados.svg", url);
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+
+document.getElementById("btn-export-png").addEventListener("click", exportResultsPNG);
+document.getElementById("btn-export-svg").addEventListener("click", exportResultsSVG);
+
+/* ===== Arranque ===== */
+ensureStateForN(state.n);
+buildNodesTable();
+updateUnitLabels();
+drawNodesCanvas();
+validateNodes();
+
+window.addEventListener("resize", ()=>{ drawNodesCanvas(); drawBarsCanvas?.(); drawResultsCanvas?.(); });
+</script>
+</body>
+</html>
