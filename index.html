@@ -42,65 +42,69 @@
   .legend{display:flex; gap:18px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--muted)}
   .chip{display:inline-flex; align-items:center; gap:8px}
   .line{width:36px; height:0; border-top:4px solid currentColor; border-radius:2px}
-/* ===== Encabezado institucional en Home ===== */
-.uni-header{
-  display:grid;
-  grid-template-columns: 160px 1fr 160px;
-  align-items:center;
-  gap:12px;
-  margin-bottom:8px;
-}
-.uni-header .uni-left,
-.uni-header .uni-right{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.uni-header img{
-  max-width:300px;
-  max-height:144px;
-  width:auto;
-  height:auto;
-  object-fit:contain;
-}
-.uni-title{
-  text-align:center;
-  line-height:1.25;
-}
-.uni-title .uabc{
-  font-size:32px;
-  font-weight:700;
-}
-.uni-title .fim{
-  margin-top:4px;
-  font-size:30px;
-  color:var(--muted);
-  font-weight:600;
-}
 
-/* Ajuste responsive */
-@media (max-width:720px){
-  .uni-header{ grid-template-columns: 100px 1fr 100px; }
-  .uni-header img{ max-width:95px; max-height:60px; }
-  .uni-title .uabc{ font-size:16px; }
-  .uni-title .fim{ font-size:14px; }
-}
+  /* ===== Encabezado institucional en Home ===== */
+  .uni-header{
+    display:grid;
+    grid-template-columns: 160px 1fr 160px;
+    align-items:center;
+    gap:12px;
+    margin-bottom:8px;
+  }
+  .uni-header .uni-left,
+  .uni-header .uni-right{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .uni-header img{
+    max-width:300px;
+    max-height:144px;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+  }
+  .uni-title{ text-align:center; line-height:1.25; }
+  .uni-title .uabc{ font-size:32px; font-weight:700; }
+  .uni-title .fim{ margin-top:4px; font-size:30px; color:var(--muted); font-weight:600; }
 
+  /* Ajuste responsive */
+  @media (max-width:720px){
+    .uni-header{ grid-template-columns: 100px 1fr 100px; }
+    .uni-header img{ max-width:95px; max-height:60px; }
+    .uni-title .uabc{ font-size:16px; }
+    .uni-title .fim{ font-size:14px; }
+  }
 
-/* Subir bloque de logo + subtítulo + botón */
-#view-home .logo{
-  margin: -80px auto -12px !important;   /* más negativo = más arriba */
-}
+  /* Subir bloque de logo + subtítulo + botón (Home) */
+  #view-home .logo{ margin: -80px auto -12px !important; }
+  #view-home .subtitle{ margin: -40px 0 10px !important; font-size: 20px !important; }
+  #view-home .center{ margin-top: -7px !important; }
 
-#view-home .subtitle{
-  margin: -40px 0 10px !important;       /* acércalo al logo */
-  font-size: 20px !important;            /* opcional */
-}
-
-#view-home .center{
-  margin-top: -7px !important;           /* sube el botón */
-}
-
+  /* ===== Resultados: layout con panel lateral ===== */
+  .results-grid{
+    display:grid;
+    grid-template-columns: 270px 1fr; /* panel izquierdo + canvas */
+    gap:16px;
+  }
+  .legend-panel{
+    border:1px solid var(--grid);
+    border-radius:12px;
+    background:#fff;
+    padding:12px 12px 10px;
+    height:560px;
+    overflow:auto;
+  }
+  .legend-panel h3{
+    font-size:16px;
+    font-weight:700;
+    margin:0 0 8px;
+  }
+  .legend-panel .chip{font-size:13px; color:var(--muted)}
+  .legend-list{margin:6px 0 12px; padding-left:0; list-style:none; font-size:13px}
+  .legend-list li{margin:6px 0; display:flex; align-items:center; gap:8px}
+  .swatch{width:34px; height:0; border-top:4px solid currentColor; border-radius:2px}
+  .small{font-size:12px; color:var(--ink)}
 </style>
 </head>
 <body>
@@ -108,31 +112,30 @@
 
     <!-- ============ PANTALLA 1: INICIO ============ -->
     <section id="view-home">
-  <!-- Encabezado institucional -->
-  <div class="uni-header">
-    <div class="uni-left">
-      <img src="assets/LogoUABC.png" alt="Logo UABC">
-    </div>
-    <div class="uni-title">
-      <div class="uabc">Universidad Autónoma de Baja California</div>
-      <div class="fim">Facultad de Ingeniería Mexicali</div>
-    </div>
-    <div class="uni-right">
-      <img src="assets/LogoFIMVector.png" alt="Logo FIM">
-    </div>
-  </div>
+      <!-- Encabezado institucional -->
+      <div class="uni-header">
+        <div class="uni-left">
+          <img src="assets/LogoUABC.png" alt="Logo UABC">
+        </div>
+        <div class="uni-title">
+          <div class="uabc">Universidad Autónoma de Baja California</div>
+          <div class="fim">Facultad de Ingeniería Mexicali</div>
+        </div>
+        <div class="uni-right">
+          <img src="assets/LogoFIMVector.png" alt="Logo FIM">
+        </div>
+      </div>
 
-  <!-- Título de la app -->
-  <h1>Simple Trusses Solver</h1>
+      <!-- Título de la app -->
+      <h1>Simple Trusses Solver</h1>
 
-  <!-- Logo central existente -->
-  <img src="assets/logo.png" alt="Logo de Simple Trusses Solver" class="logo" width="450" height="" />
-  <p class="subtitle">Simulador educativo del Método de Nodos</p>
-  <div class="center">
-    <button class="cta" id="btn-start">Iniciar Simulación</button>
-  </div>
-</section>
-
+      <!-- Logo central existente -->
+      <img src="assets/logo.png" alt="Logo de Simple Trusses Solver" class="logo" width="450" height="" />
+      <p class="subtitle">Simulador educativo del Método de Nodos</p>
+      <div class="center">
+        <button class="cta" id="btn-start">Iniciar Simulación</button>
+      </div>
+    </section>
 
     <!-- ============ PANTALLA 2: NODOS ============ -->
     <section id="view-nodes" class="hidden">
@@ -295,7 +298,17 @@
           <button class="btn" id="btn-export-svg">Exportar SVG</button>
         </div>
 
-        <div class="pad">
+        <!-- Panel lateral + Canvas -->
+        <div class="pad results-grid">
+          <aside class="legend-panel">
+            <h3>Resultados</h3>
+            <div class="chip" style="color:var(--tension)"><span class="swatch"></span> Tensión (F ≥ 0)</div>
+            <div class="chip" style="color:var(--comp)"><span class="swatch"></span> Compresión (F &lt; 0)</div>
+            <ul id="bars-legend" class="legend-list"></ul>
+            <h3 style="margin-top:6px">Reacciones en apoyos</h3>
+            <div id="supports-legend" class="small"></div>
+          </aside>
+
           <canvas id="results-canvas" width="900" height="560"></canvas>
         </div>
       </div>
@@ -340,6 +353,13 @@ function updateUnitLabels(){
   set("ux",lenU); set("uy",lenU); set("ufx",forceU); set("ufy",forceU);
   ["uL","uF","uFx","uFy"].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=`[${id==="uL"?lenU:forceU}]`; });
   const uh=document.getElementById("units-head"); if(uh) uh.textContent=`[${lenU}, ${forceU}]`;
+}
+function getForceUnit(){
+  const [, fUnit] = parseUnits(state.units);
+  return fUnit || "N";
+}
+function formatForce(v, digits=3){
+  return `${Number(v).toFixed(digits)} ${getForceUnit()}`;
 }
 
 /* ===== Entrada numérica con 4 decimales ===== */
@@ -693,8 +713,45 @@ function setupReactionsScreen(){
 }
 document.getElementById("to-results").onclick=()=>{ show("view-results"); setupResultsScreen(); };
 
-/* ===================== RESULTADOS (flechas dentro del canvas) ===================== */
-function setupResultsScreen(){ updateUnitLabels(); drawResultsCanvas(); }
+/* ===================== RESULTADOS (panel + canvas) ===================== */
+function updateResultsSidebar(){
+  const list = document.getElementById("bars-legend");
+  const supBox = document.getElementById("supports-legend");
+  if(!list || !supBox) return;
+
+  list.innerHTML = "";
+  const members = state.results?.members || [];
+
+  // Cada barra con su color y estado
+  for(const row of members){
+    const li = document.createElement("li");
+    const color = (row.F >= 0)
+      ? getComputedStyle(document.documentElement).getPropertyValue('--tension').trim()
+      : getComputedStyle(document.documentElement).getPropertyValue('--comp').trim();
+    li.innerHTML = `
+      <span class="swatch" style="color:${color}"></span>
+      <span><b>${row.bar}</b>: F=${formatForce(row.F)} &nbsp;(${row.estado})</span>`;
+    list.appendChild(li);
+  }
+
+  // Reacciones por apoyo
+  const Rx = state.results?.Rx || new Map();
+  const Ry = state.results?.Ry || new Map();
+  const lines = [];
+  for(let i=1;i<=state.n;i++){
+    const rx = Rx.get(i) || 0, ry = Ry.get(i) || 0;
+    if(Math.abs(rx)>1e-9 || Math.abs(ry)>1e-9){
+      const parts = [];
+      if(Math.abs(rx)>1e-9) parts.push(`Rx=${formatForce(rx)}`);
+      if(Math.abs(ry)>1e-9) parts.push(`Ry=${formatForce(ry)}`);
+      lines.push(`<div>N${i}: ${parts.join("  ")}</div>`);
+    }
+  }
+  supBox.innerHTML = lines.length ? lines.join("") : "<div class='hint'>Sin apoyos con reacción.</div>";
+}
+
+function setupResultsScreen(){ updateUnitLabels(); drawResultsCanvas(); updateResultsSidebar(); }
+
 function clampEndInsideRect(x1,y1,x2,y2, xmin,ymin,xmax,ymax){
   let dx=x2-x1, dy=y2-y1, t=1.0;
   if(dx>0) t=Math.min(t,(xmax-x1)/dx); else if(dx<0) t=Math.min(t,(xmin-x1)/dx);
@@ -745,7 +802,7 @@ function drawResultsCanvas(){
                               :getComputedStyle(document.documentElement).getPropertyValue('--comp').trim();
     ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
     const xm=(a[0]+b[0])/2, ym=(a[1]+b[1])/2;
-    ctx.fillStyle="#111"; ctx.font="12px Inter, sans-serif"; ctx.fillText(`${row.bar}  F=${row.F.toFixed(3)}`, xm+6, ym-6);
+    ctx.fillStyle="#111"; ctx.font="12px Inter, sans-serif"; ctx.fillText(`${row.bar}  F=${formatForce(row.F)}`, xm+6, ym-6);
   }
 
   // Nodos
@@ -767,14 +824,14 @@ function drawResultsCanvas(){
       const [cx,cy]=clampEndInsideRect(x,y,x2,y2, xmin,ymin,xmax,ymax);
       drawArrow(ctx, x,y, cx,cy, 2,10, "#111");
       const [lx,ly]=clampPoint(cx+6, cy+12, xmin, ymin, xmax, ymax);
-      ctx.fillText(`Rx=${rx.toFixed(3)}`, lx, ly);
+      ctx.fillText(`Rx=${formatForce(rx)}`, lx, ly);
     }
     if(Math.abs(ry)>1e-9){
       const x2=x, y2=y - k*ry; // y hacia arriba
       const [cx,cy]=clampEndInsideRect(x,y,x2,y2, xmin,ymin,xmax,ymax);
       drawArrow(ctx, x,y, cx,cy, 2,10, "#111");
       const [lx,ly]=clampPoint(cx+6, cy-6, xmin, ymin, xmax, ymax);
-      ctx.fillText(`Ry=${ry.toFixed(3)}`, lx, ly);
+      ctx.fillText(`Ry=${formatForce(ry)}`, lx, ly);
     }
   }
 }
@@ -843,7 +900,7 @@ function exportResultsSVG(){
     const col = (row.F>=0)?colorTension:colorComp;
     svg += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="4" stroke-linecap="round"/>`;
     const xm=(a[0]+b[0])/2, ym=(a[1]+b[1])/2;
-    svg += `<text x="${xm+6}" y="${ym-6}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">${row.bar}  F=${row.F.toFixed(3)}</text>`;
+    svg += `<text x="${xm+6}" y="${ym-6}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">${row.bar}  F=${formatForce(row.F)}</text>`;
   }
 
   for(const o of pts){
@@ -870,14 +927,14 @@ function exportResultsSVG(){
       const end = clampEndInsideRect(x,y,x2,y2);
       svg += `<line x1="${x}" y1="${y}" x2="${end[0]}" y2="${end[1]}" stroke="#111" stroke-width="2" marker-end="url(#arrow)"/>`;
       const lbl = clampPoint(end[0]+6, end[1]+12);
-      svg += `<text x="${lbl[0]}" y="${lbl[1]}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">Rx=${rx.toFixed(3)}</text>`;
+      svg += `<text x="${lbl[0]}" y="${lbl[1]}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">Rx=${formatForce(rx)}</text>`;
     }
     if(Math.abs(ry)>1e-9){
       const x2=x, y2=y - k*ry;
       const end = clampEndInsideRect(x,y,x2,y2);
       svg += `<line x1="${x}" y1="${y}" x2="${end[0]}" y2="${end[1]}" stroke="#111" stroke-width="2" marker-end="url(#arrow)"/>`;
       const lbl = clampPoint(end[0]+6, end[1]-6);
-      svg += `<text x="${lbl[0]}" y="${lbl[1]}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">Ry=${ry.toFixed(3)}</text>`;
+      svg += `<text x="${lbl[0]}" y="${lbl[1]}" font-family="Inter,Arial,sans-serif" font-size="12" fill="#111">Ry=${formatForce(ry)}</text>`;
     }
   }
 
